@@ -29,8 +29,11 @@ Composer then send the result to hash.js using promises and from hash.js to MyHb
 # Running locally:
 
 `npm install`
+
 `npm start`
 
+
+You can view your hbar balance, send transactions, and manage your wallet.
 You can test contracts 0.0.21261 (HbarToken) and 0.0.20354 (Rejolut Token)
 
 You can also deploy your own version using this file (https://gist.github.com/publu/d12c06349e517ea0f51a529fab457ae2)
