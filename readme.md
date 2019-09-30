@@ -1,4 +1,4 @@
-#What is it?
+# What is it?
 
 MyHbarTokens is an open source client-side HBAR wallet which helps to interact with smart contracts Hedera Hashgraph.
 Connection to the Hashgraph is made via composer (chrome extension) which holds the account's private key in an encrypted format inside the browser to make sure its safe and secure and only a user has access to it.
@@ -35,4 +35,19 @@ You can test contracts 0.0.21261 (HbarToken) and 0.0.20354 (Rejolut Token)
 
 You can also deploy your own version using this file (https://gist.github.com/publu/d12c06349e517ea0f51a529fab457ae2)
 
+# License
+
+ Copyright 2019 Hashing Systems Inc
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 
