@@ -1,0 +1,1 @@
+export const DROPDOWNLIST_NONE_OPTION = "None"
