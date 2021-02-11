@@ -26,3 +26,8 @@ export const accountIdToEthAddress = (accountId) => {
     let etherAddress = defaultAddress.substr(0, remainingCount) + etherAddressRaw + defaultAddress.substr(remainingCount + etherAddressRaw.length)
     return etherAddress;
 }
+
+export const ethAddressToAccountId = (accountId) => {
+    let accId = `0.0.${parseInt(accountId, 16)}`
+    return (accId);
+}

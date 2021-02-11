@@ -12,7 +12,7 @@ import { HederaPayment } from "./hedera-payment";
 import Swal from 'sweetalert2/dist/sweetalert2.js'
 import 'sweetalert2/src/sweetalert2.scss'
 // import { TokenData } from "../token-table/token-data";
-import { accountIdToEthAddress } from '../../../../../utils/conversion/convertors';
+import { accountIdToEthAddress, ethAddressToAccountId } from '../../../../../utils/conversion/convertors';
 
 export class SectionModalSendTokensPureComponent extends React.Component<ISectionModalsProps, {}> {
   state = {
@@ -196,38 +196,29 @@ export class SectionModalSendTokensPureComponent extends React.Component<ISectio
               }
             })
         } else {
-          let data = {
-            contractid: contractId,
-            memo: "token transfer",
-            paymentserver: "https://mps.hashingsystems.com",
-            params: `[${toAddress},${amount}]`,
-            amount: 0,
-            abi: `[{
-            "constant": false,
-            "inputs": [
-              {
-                "name": "_to",
-                "type": "address"
-              },
-              {
-                "name": "_value",
-                "type": "uint256"
-              }
-            ],
-            "name": "transfer",
-            "outputs": [
-              {
-                "name": "success",
-                "type": "bool"
-              }
-            ],
-            "payable": false,
-            "stateMutability": "nonpayable",
-            "type": "function"
-          }]`,
-          }
-          const _this = this;
-          hash.triggerSmartContract(data)
+
+
+        let extensionid = "hdjnnemgikeoehneddegfcmkljenlean";
+        console.log("toAddress", this.state.toAddressValue)
+        let data = {
+            memo:"My First Hedera Transaction",
+            contentid:'test1',
+            recipientlist:'[{"tokenId": "'+contractId+'", "token": "'+amount+'", "decimals":"8", "to":"'+this.state.toAddressValue+'"}]'
+        }
+
+        let transferToken = () => {
+            let contractDiv = document.getElementsByTagName('body')[0];
+            let hederaTag = document.createElement("hedera-micropayment");
+                hederaTag.setAttribute("data-memo", data.memo || ' ');
+                hederaTag.setAttribute("data-contentid", data.contentid || '');
+                hederaTag.setAttribute("data-extensionid", extensionid);
+                hederaTag.setAttribute("data-recipientlist", data.recipientlist || '');
+            contractDiv.appendChild(hederaTag);
+        }
+        const _this = this;
+
+        transferToken();
+        /*
             .then(res => {
               if (res.code == 200) {
                 Swal.fire({
@@ -266,7 +257,8 @@ export class SectionModalSendTokensPureComponent extends React.Component<ISectio
                   confirmButtonText: 'Ok',
                 })
               }
-            })
+            }) 
+            */           
         }
       }
     }

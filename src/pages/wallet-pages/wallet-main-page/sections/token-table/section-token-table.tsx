@@ -24,7 +24,6 @@ export class SectionTokenTablePureComponent extends React.Component<ISectionToke
   componentWillReceiveProps = (nextProps: ISectionTokenTableProps) => {
     this.getTokenData();
     this.setState({ selectedTokenIds: nextProps.selectedTokenIds });
-
   }
 
   componentWillMount = () => {
@@ -44,9 +43,12 @@ export class SectionTokenTablePureComponent extends React.Component<ISectionToke
   }
 
   getTokenData = () => {
-    let tokenObj: any = localStorage.getItem('tokenObj');
+
+    let tokenObj: any = {};
+
+    tokenObj.listTokens = new Array();
+
     let tokenSelected = localStorage.getItem('selected_tokens_key');
-    tokenObj = JSON.parse(tokenObj);
     if (!tokenObj || (tokenObj.listTokens && tokenObj.listTokens.length < 2) || !tokenSelected) {
       localStorage.setItem('selected_tokens_key', JSON.stringify(["HBAR"]));
     }
@@ -63,30 +65,8 @@ export class SectionTokenTablePureComponent extends React.Component<ISectionToke
     let newSelectedTokenData: any[] = this.props.selectedTokenIds;
 
     let updated = false;
-    newTokenData.listTokens.forEach(token => {
-      if (token.address === address) {
-        updated = true;
-        token.id = id;
-        token.address = address;
-        token.name = name;
-        token.balances = balance;
-        token.usds = "";
-      }
-    });
-    if (!updated) {
-      let newToken: any = {
-        "id": id,
-        "address": address,
-        "name": name,
-        "balances": balance,
-        "usds": ""
-      };
-      newSelectedTokenData.push(name);
-      newTokenData.listTokens.push(newToken);
-    }
-    localStorage.setItem('tokenObj', JSON.stringify(newTokenData));
-    this.setState({ tokenData: newTokenData });
-    this.saveSelectedTokensToLocalStorage(newSelectedTokenData);
+
+    // we snipe the array here 
   }
 
 
@@ -96,50 +76,6 @@ export class SectionTokenTablePureComponent extends React.Component<ISectionToke
     this.setState({ selectedTokenIds: savedTokens });
   }
 
-  deleteToken = (accountID) => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-      if (result.value) {
-        let tokenObj: any = localStorage.getItem('tokenObj');
-        let tokenSelectedObj: any = localStorage.getItem('selected_tokens_key');
-        tokenSelectedObj = JSON.parse(tokenSelectedObj);
-
-        tokenObj = JSON.parse(tokenObj);
-        let deleteIndex = null
-        let deleteToken = '';
-        tokenObj.listTokens.forEach((token, index) => {
-          if (token.address === accountID) {
-            deleteIndex = index;
-            deleteToken = token.name;
-          }
-        });
-        if (deleteIndex && tokenSelectedObj) {
-          tokenSelectedObj = tokenSelectedObj.filter((tokenname) => {
-            if (tokenname != deleteToken) {
-              return tokenname
-            }
-          })
-          let newTokenObj = tokenObj.listTokens.splice(deleteIndex, 1);
-          localStorage.setItem('tokenObj', JSON.stringify(tokenObj));
-          localStorage.setItem('selected_tokens_key', JSON.stringify(tokenSelectedObj));
-          let newSelectedToken = localStorage.getItem('selected_tokens_key');
-          this.setState({ selectedTokenIds: newSelectedToken, tokenData: tokenObj })
-        }
-        Swal.fire(
-          'Deleted!',
-          'Your token has been deleted.',
-          'success'
-        )
-      }
-    })
-  }
 
   render() {
     const { tokenData } = this.state;
@@ -155,7 +91,7 @@ export class SectionTokenTablePureComponent extends React.Component<ISectionToke
         <BodyRow>
           <Column style={{ flex: 1 }}>
             {
-              tokenData.listTokens.filter(publicToken => this.props.selectedTokenIds.includes(publicToken.id)).map((token, index) => {
+              tokenData.listTokens.map((token, index) => {
                 return (
                   <Row key={index}>
                     <TokenBodyColumn>
@@ -174,17 +110,9 @@ export class SectionTokenTablePureComponent extends React.Component<ISectionToke
                       </BalanceBodyCell>
                     </BalanceBodyColumn>
                     <ActionBodyColumn>
-                      <ActionBodyCell onClick={() => this._handleClickViewBalanceActionButton(index, token, tokenData.address)}>
-                        View Balance
-                      </ActionBodyCell>
                       <ActionBodyCell onClick={() => this._handleClickSendActionButton(token.name, tokenData.accountID)}>
                         Send
                       </ActionBodyCell>
-                      {index !== 0 ? <ActionBodyCell onClick={() => this.deleteToken(token.address)}>
-                        Delete
-                      </ActionBodyCell> : <ActionBodyCell onClick={() => { }} style={{ visibility: 'hidden' }}>
-                          Delete
-                        </ActionBodyCell>}
                     </ActionBodyColumn>
                   </Row>
                 )
@@ -213,63 +141,7 @@ export class SectionTokenTablePureComponent extends React.Component<ISectionToke
   }
 
   _handleClickViewBalanceActionButton = (index: number, token: any, walletAddress: string) => {
-    if (token.address === this.state.tokenData.accountID) {
-      this.checkBalance();
-    } else {
-      this.fetchBalances(index, token, walletAddress);
-    }
-  }
-
-
-  fetchBalances = async (index, tokenData, walletAddress) => {
-    const hash = (window as any).hash;
-    if (hash) {
-      let newTokenData = this.state.tokenData;
-      let data = {
-        contractid: tokenData.address,
-        memo: "balance ",
-        paymentserver: "https://mps.hashingsystems.com",
-        params: `["${walletAddress.toString()}"]`,
-        amount: 0,
-        abi: `[{
-        "constant": true,
-        "inputs": [
-          {
-            "name": "_owner",
-            "type": "address"
-          }
-        ],
-        "name": "balanceOf",
-        "outputs": [
-          {
-            "name": "balance",
-            "type": "uint256"
-          }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-      }]`,
-      }
-      hash.triggerSmartContract(data)
-        .then(res => {
-          if (res.result === null) {
-            this.props.updateBalancesValues("0")
-          } else {
-            this.props.updateBalancesValues(res.result.toString())
-            newTokenData.listTokens[index].balances = res.result  // TODO 1e18;
-            this.setState({ tokenData: newTokenData })
-          }
-        })
-        .catch(err => {
-          Swal.fire({
-            title: 'Error',
-            text: 'Error: ' + err,
-            type: 'error',
-            confirmButtonText: 'Ok',
-          })
-        })
-    }
+    this.checkBalance();
   }
 
   checkBalance = async () => {
@@ -284,9 +156,33 @@ export class SectionTokenTablePureComponent extends React.Component<ISectionToke
           TokenDataObj.address = accountIdToEthAddress(res.currentAccount);
           TokenDataObj.listTokens[0].balances=tinyBarsToHBarsCurr(res.balance);
           TokenDataObj.listTokens[0].address = res.currentAccount;
-          localStorage.setItem('tokenObj', JSON.stringify(TokenDataObj));
-          this.setState({ tokenData: TokenDataObj })
 
+          let sub="";
+          if(res.currentNetwork != "mainnet"){
+            sub = ".testnet"
+          }
+    
+          fetch('https://api'+sub+'.kabuto.sh/v1/entity/' + res.currentAccount)
+            .then(response => response.json())
+            .then(data => {
+
+              for (var token in data.account.balance.tokens) {
+                  if (data.account.balance.tokens.hasOwnProperty(token)) {
+                      console.log(token + " -> " + data.account.balance.tokens[token]);
+
+                      let balance = String(data.account.balance.tokens[token]);
+                      TokenDataObj.listTokens.push({
+                        "id": token,
+                        "address": token,
+                        "name": token,
+                        "balances": balance.substring(0, balance.length-8)+"." + balance.substring(balance.length-8, balance.length),
+                        "usds": ""
+                      })
+                  }
+              }
+              localStorage.setItem('tokenObj', JSON.stringify(TokenDataObj));
+              this.setState({ tokenData: TokenDataObj })
+            });
         })
         .catch(err => {
           //TODO show modal for error
